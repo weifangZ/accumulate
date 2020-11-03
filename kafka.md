@@ -75,20 +75,67 @@ forllower  要同步leader数据
 
 **2.2、配置（学习中）**
 
-**1、ISR:**\
-应对数据可靠性保证。
-解决副本故障不能发送ack的问题\
-in-sync replica set  （同步副本）\
+**数据可靠性保证方式：**
+为了保证producor发送的数据尽量可靠的发送到指定的topic中，topic的每个partition收到producer发送的数据后都向producer发送ack，如果producer收到ack后进行下一轮发送。如果收不到ack则进行重新发送。
+
+这样就会出现何时发送ack呢？
+- 1、leader和follower都收到了在发ack \
+优点：副本少 缺点：延迟高
+- 2、半数以上的follower收到后发送ack \
+优点：延迟低 缺点：副本多
+
+kafka 选用第二种方案，做了个优化提出了**ISR**
+
+
+**1、ISR:in-sync replica set （同步副本）**\
+应对数据可靠性保证。解决副本故障不能发送ack的问题\
 kafka查看ISR中的follower是否同步完成，完成后直接发ack不在等待不在ISR中的follower是否同步完成。当然如果出现ISR中的follower出现了长时间不同步数据，就将它提出ISR重新选取follower。
 选取follower \
 进入ISR原则：
 - leader节点挂掉了后选取新的leader尽量不丢数据。
 - 尽量选offset高的，丢数据丢的少。
+- replica.lag.time.max.ms 如果follower不能按时发送一个请求，或者不能消费最后一下offset时会移除isr队列，默认10秒。
+- replica.lag.time.max.message（被移除了）
+（两个条件的时候因为，会出现，满足1进去，后不满足2时剔除isr，这样会频繁的操作内存。，还要操作Zookeeper。0.9版本后移除）
 
+**2、ack应答机制**
+提供三种级别（acks配置）：
+- 0，leader写完无论follower写没写完，producer只发一遍不等leader与follower时候写完。**会丢数据**
+- 1，只等待leader，不等到follower写完就同步数据，此时leader挂了会丢数据。 **会丢数据**
+- -1（all），此时等待leader与isr里面的follower全部完成后来返回ack。极限情况也会有丢数据时，isr只有leader了，follower特别慢时候isr就只有leader，退化到了1的情况。**重复数据，保证producer数据不丢失**
 
+等于-1时会重复数据，leader与follower已经同步完成，此时leader挂了，还没发送ack，选一个follower当leader，此时producer会重复发送数据。
+
+**3、数据存储一致性问题**
+
+**保证消费者消费数据一致性**
+- **HW** 高水位线（多个isr中最小的offset）
+- **LEO** 最后一个offset （每个副本中的最新的那个offset）\
+kafka对于消费者暴露的只有hw，此时能够保证消费者消费的数据一致性问题。木桶短板效应。
+
+**存储数据一致性问题**
+
+重新选择leader时，给所有follower发消息要截取到HW位置。高于HW的数据全部截取掉，不进行存储。
+
+**HW**只保证数据一致性而不保证数据丢不丢与数据重复不重复问题。
+
+ **5、Broker Configs**
+ 
+    - broker.id
+    - log.dirs
+    - zookeeper.connect
+![](https://github.com/weifangZ/accumulate/blob/main/images/zookeeper-connect.png)
 **2.3、kafka性能调优（待学习）**
 
 **2.4、APIs（待学习）**
+
+
+**2.5、存储（学习中）**
+
+index文件与
+log文件
+快速查找定位。
+每个数据块大小相同，通过offset乘以块大小直接定位数据位置。
 
 
 

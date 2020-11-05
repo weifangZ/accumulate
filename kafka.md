@@ -73,7 +73,10 @@ kafka2 ： 192.168.131.128
 每个分区都维护一个offet
 forllower  要同步leader数据
 
-**2.2、配置（学习中）**<font color='red'>（2020年11月2-6日）</font>
+**2.2、配置（学习中）** 
+``` json
+<font color='red'>（2020年11月2-6日）</font>
+```
 
 **数据可靠性保证方式：**
 为了保证producor发送的数据尽量可靠的发送到指定的topic中，topic的每个partition收到producer发送的数据后都向producer发送ack，如果producer收到ack后进行下一轮发送。如果收不到ack则进行重新发送。
@@ -189,8 +192,9 @@ log文件
 ```
 通过对比内存与kafka中的导出数据进行对比可以解决。
 
-问题2： <font color='red'>（2020年11月2-6日）</font>
-```
+问题2： 
+``` json
+<font color='red'>（2020年11月2-6日）</font>
 kafka.clients.consumer.commitFailedException:commit cannot be completed
 ```
 原因

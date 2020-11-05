@@ -73,7 +73,7 @@ kafka2 ： 192.168.131.128
 每个分区都维护一个offet
 forllower  要同步leader数据
 
-**2.2、配置（学习中）** ==（2020年11月2-6日）==
+**2.2、配置（学习中）**<font color='red'>（2020年11月2-6日）</font>
 
 **数据可靠性保证方式：**
 为了保证producor发送的数据尽量可靠的发送到指定的topic中，topic的每个partition收到producer发送的数据后都向producer发送ack，如果producer收到ack后进行下一轮发送。如果收不到ack则进行重新发送。
@@ -141,7 +141,13 @@ kafka对于消费者暴露的只有hw，此时能够保证消费者消费的数�
     - log.retention.bytes	日志删除的大小阈值	long	-1（不限制）		高
     - log.retention.hours	日志删除的时间阈值（小时为单位）	int	168（7天）		高 对应还有分钟、毫秒的设置。
     - log.segment.bytes	单个日志段文件最大大小	int	1073741824（1GB）	[14,...]	高
+
+zookeeper-connect
+
 ![zookeeper-connect](https://github.com/weifangZ/accumulate/blob/main/images/zookeeper-connect.png)
+
+auto.create.topics.enable
+
 ![auto.create.topics.enable](https://github.com/weifangZ/accumulate/blob/main/images/cteate%20topic.png)
 
 **5、Topic-Level Configs**
@@ -183,9 +189,10 @@ log文件
 ```
 通过对比内存与kafka中的导出数据进行对比可以解决。
 
-问题2：==（2020年11月2-6日）==
+问题2： <font color='red'>（2020年11月2-6日）</font>
+```
 kafka.clients.consumer.commitFailedException:commit cannot be completed
-
+```
 原因
 
 ![](https://github.com/weifangZ/accumulate/blob/main/images/re-balance.png)

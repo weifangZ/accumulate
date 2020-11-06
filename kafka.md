@@ -73,10 +73,7 @@ kafka2 ： 192.168.131.128
 每个分区都维护一个offet
 forllower  要同步leader数据
 
-**2.2、配置（学习中）** 
-``` json
-<font color='red'>（2020年11月2-6日）</font>
-```
+**2.2、配置（学习中）**<font color='red'>（2020年11月2-6日）</font>
 
 **数据可靠性保证方式：**
 为了保证producor发送的数据尽量可靠的发送到指定的topic中，topic的每个partition收到producer发送的数据后都向producer发送ack，如果producer收到ack后进行下一轮发送。如果收不到ack则进行重新发送。
@@ -108,8 +105,9 @@ kafka查看ISR中的follower是否同步完成，完成后直接发ack不在等�
 - 0，leader写完无论follower写没写完，producer只发一遍不等leader与follower时候写完。**会丢数据**
 - 1，只等待leader，不等到follower写完就同步数据，此时leader挂了会丢数据。 **会丢数据**
 - -1（all），此时等待leader与isr里面的follower全部完成后来返回ack。极限情况也会有丢数据时，isr只有leader了，follower特别慢时候isr就只有leader，退化到了1的情况。**重复数据，保证producer数据不丢失**\
+![acks](https://github.com/weifangZ/accumulate/blob/main/images/acks.png)\
 ==补充：==
-- **min.insync.replicas**	当producer将ack设置为“全部”（或“-1”）时，min.insync.replicas指定了被认为写入成功的最小副本数。如果这个最小值不能满足，那么producer将会引发一个异常（NotEnoughReplicas或NotEnoughReplicasAfterAppend）。当一起使用时，min.insync.replicas和acks允许您强制更大的耐久性保证。 一个经典的情况是创建一个复本数为3的topic，将min.insync.replicas设置为2，并且producer使用“all”选项。 这将确保如果大多数副本没有写入producer则抛出异常。
+- **min.insync.replicas**	当producer将ack设置为“全部”（或“-1”）时，min.insync.replicas指定了被认为写入成功的最小副本数。如果这个最小值不能满足，那么producer将会引发一个异常（NotEnoughReplicas或NotEnoughReplicasAfterAppend）。当一起使用时，min.insync.replicas和acks允许您强制更大的耐久性保证。 一个经典的案例是创建一个复本数为3的topic，将min.insync.replicas设置为2，并且producer使用“all”选项。 这将确保如果大多数副本没有写入producer则抛出异常。
 
 等于-1时会重复数据，leader与follower已经同步完成，此时leader挂了，还没发送ack，选一个follower当leader，此时producer会重复发送数据。
 
@@ -192,9 +190,8 @@ log文件
 ```
 通过对比内存与kafka中的导出数据进行对比可以解决。
 
-问题2： 
-``` json
-<font color='red'>（2020年11月2-6日）</font>
+问题2： <font color='red'>（2020年11月2-6日）</font>
+```
 kafka.clients.consumer.commitFailedException:commit cannot be completed
 ```
 原因

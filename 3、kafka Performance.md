@@ -128,13 +128,11 @@ push模式很难适应消费速率不同的消费者，因为消息发送速率�
 
 基于pull模式不足之处在于，如果broker没有数据，消费者会轮询，忙等待数据直到数据到达，为了避免这种情况，kafka提供消费者在pull请求时候使用“long poll”进行阻塞，直到数据到达 。
 
-<html>
-<font color='green'>
-举例：自助餐厅，厨师们（producers）在哪里不停地工作，有的烤羊肉串，有的切生鱼片...，做好了就放（push）在取餐区（broker/其中多个柜台相当于partition），顾客（consumers）花了69块钱进了餐厅，就相当于消费者订阅了这个topic，客户们坐在座子上准备开吃，这时候他么要去取餐区主动去拿（pull），这种模式就是kafka的生产消费者的模式。
-</font>
-</html>
 
-kafka consumer通过向broker发送fetch请求消费数据，目前kafka提供KafkaTemplate中的接口：
+举例：自助餐厅，厨师们（producers）在哪里不停地工作，有的烤羊肉串，有的切生鱼片...，做好了就放（push）在取餐区（broker/其中多个柜台相当于partition），顾客（consumers）花了69块钱进了餐厅，就相当于消费者订阅了这个topic，客户们坐在座子上准备开吃，这时候他么要去取餐区主动去拿（pull），这种模式就是kafka的生产消费者的模式。
+
+
+目前kafka提供KafkaTemplate中的接口：
 ``` java
 //topic：这里填写的是Topic的名字
 //partition：这里填写的是分区的id，其实也是就第几个分区，id从0开始。表示指定发送到该分区中
@@ -158,54 +156,27 @@ ListenableFuture<SendResult<K, V>> send(ProducerRecord<K, V> record);
 ListenableFuture<SendResult<K, V>> send(Message<?> message);
 ```
 
-
-**2.3、kafka性能调优（待学习）**
-
-
-**2.4、APIs（待学习）**
-
-
-**2.5、存储（学习中）**
-
-
-
-
-
-
 ### 三、kafka常见问题汇总
 
-**问题1**：kafka topic数据与内存数据不一致的情况。\
-**首先：** 
-查看消费情况
-```
-./kafka-consumer-groups.sh --describe --bootstrap-server 170.0.39.164:9092 --group dce-mt-realTime-wanghong12345
-```
-执行下面命令即可将日志数据文件内容dump出来 
-```
-./kafka-run-class.sh kafka.tools.DumpLogSegments --files /home/dce/clear/allmetadata/mcTrade-0/00000000000022372103.log --print-data-log > 00000000000022372103_txt.log
-```
-通过对比内存与kafka中的导出数据进行对比可以解决。
-
-问题2： <font color='red'>（2020年11月2-6日）</font>
-```
-kafka.clients.consumer.commitFailedException:commit cannot be completed
-```
-原因
-
-![](https://github.com/weifangZ/accumulate/blob/main/images/re-balance.png)
-
-有个很重要的概念，kafka会管理如何分配分区的消费。 
-
-（1）当某个consumer消费了数据，但是在特定的时间内没有commit，它就认为consumer挂了。这个时候就要rebalance了。这个时间和“heartbeat.interval.ms”配置相关。 
-
-（2）每次consumer从kafka poll数据时，每次poll会有一个量的控制，“max.partition.fetch.bytes”配置决定。
-
-如果有两个消费者同时消费一个topic时，而且他们的groupId相同，会只有一个消费者进行消费，如果这个消费者组出现被consumer判断为挂了，则会让另一个消费之进行消费。导致单点丢数据。
 
 **问题3**：(时间：2020年11月09-13日)
 删除topic数据后，生产者写入topic（自动创建该topic）的数据很快就会自动删除。
 
-**考虑每个交易日需要删除topic数据 auto-offset-reset设置latest|earliest等情况，清算在盘中重启后怎么重新拉取已消费过的数据，怎么保障不会重复消费数据。offset过期问题。待讨论**
+最初清算的高可用的设计，两个点分别都在kafka中获取交易数据，当一个点坏了后，直接使用另一个点，所以配置中设置：
+```
+//当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，消费新产生的该分区下的数据
+auto-offset-reset:latest
+enable-auto-commit: true
+```
+但是经过与场上沟通，他们的BG模块需要每日清前日的topic才能往里面写新的数据，那么我可以设置：
+```
+//当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，从头开始消费
+auto-offset-reset:earliest
+enable-auto-commit: false
+```
+这样单点故障后这个点起来还可以重新将数据拉回来。
+
+
 
 参考文献：
 

@@ -204,20 +204,8 @@ kafka.clients.consumer.commitFailedException:commit cannot be completed
 
 **问题3**：(时间：2020年11月09-13日)
 删除topic数据后，生产者写入topic（自动创建该topic）的数据很快就会自动删除。
-目前得知：测试环境删除topic数据的方式为：删除topic，应改成
-删除topic中的数据方式：
 
-```
-./kafka-delete-records.sh --bootstrap-server 192.168.131.131:9092 --offset-json-file xxx.json
-
-xxx.json
-{"partitions":  
-    [{"topic": "mcTrade", 
-    "partition": 0,
-    "offset": 882}], 
-"version":1 
-}  
-```
+**考虑每个交易日需要删除topic数据 auto-offset-reset设置latest|earliest等情况，清算在盘中重启后怎么重新拉取已消费过的数据，怎么保障不会重复消费数据。offset过期问题。待讨论**
 
 参考文献：
 

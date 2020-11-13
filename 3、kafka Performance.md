@@ -1,5 +1,5 @@
 
-**kafka通过什么技术使得其性能如此之快？**(时间：2020年11月09-13日)
+### kafka通过什么技术使得其性能如此之快？(时间：2020年11月09-13日)
 
 **1、数据写入**
 
@@ -73,9 +73,9 @@ Kafka提供了一个参数——producer.type（0.10.0后的版本kafka利用：
 Kafka重度依赖底层操作系统提供的PageCache功能。当上层有写操作时，操作系统只是将数据写入PageCache，同时标记Page属性为Dirty。当读操作发生时，先从PageCache中查找，如果发生缺页才进行磁盘调度，最终返回需要的数据。实际上PageCache是把尽可能多的空闲内存都当做了磁盘缓存来使用。同时如果有其他进程申请内存，回收PageCache的代价又很小，所以现代的OS都支持PageCache。
 使用PageCache功能同时可以避免在JVM内部缓存数据，大大的提升性能
 
-4、另外kafka消费者能够快速的消费指定offset以后的数据的秘诀取决于kafka数据存储的设计。
+另外kafka消费者能够快速的消费指定offset以后的数据的秘诀取决于kafka数据存储的设计。
 
-**kafka采取了分片(segment)+索引(index) 的机制。**
+**3、kafka采取了分片(segment)+索引(index) 的机制。**
 
 
 partition分区下面会分为多个segment片段（分片），每个分片对应着.log（存放实际数据）和.index（存放索引）文件。如下图示例：：
@@ -112,7 +112,7 @@ kafka为什么性能高
 - 顺序写磁盘
 - Zero Copy
 
-#### kafka topic的pull VS push
+### kafka topic的pull VS push
 kafka架构
 ![](https://ss0.baidu.com/6ON1bjeh1BF3odCf/it/u=120726874,1885633316&fm=27&gp=0.jpg)
 

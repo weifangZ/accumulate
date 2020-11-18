@@ -201,7 +201,8 @@ public class KafkaConsumer {
                         System.out.println(record.value()+"a");
                     }
 
-                 //提交offset kafkaConsumer.commitAsync();
+                    //提交offset 
+                    kafkaConsumer.commitAsync();
                 }
             }
         } finally {

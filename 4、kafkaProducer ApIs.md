@@ -57,7 +57,9 @@ public class KafkaLn {
 
 ```
 在上述代码的第十步看到了send原生的提供的接口：
+
 ![](http://note.youdao.com/yws/public/resource/ffefb6fa5bca403ed5711d3e6aed479d/xmlnote/7D5534E95C6949D2B1489C06086AC82C/24283)
+
 也回顾上上周的理论学习知识。
 
 **带回调函数的的producer**
@@ -119,7 +121,9 @@ public class KafkaCallBackProducer {
 
 ```
 得到结果如下：
+
 ![](http://note.youdao.com/yws/public/resource/ffefb6fa5bca403ed5711d3e6aed479d/xmlnote/F26C3A080D53482AB16A7F9D30558BB4/24333)
+
 因为知道producer调用的顺序需要经过一个分区器：我就学着进行了一项测试：加了个自定义分区器，由原来默认分区器，在不指定分区时，通过key的哈希值进行模上有效分区数得到应发分区。写死了只发给分区0。
 
 **自定义分区器**
@@ -208,6 +212,7 @@ public class KafkaConsumer {
 
 ```
 得到的结果如下：
+
 ![](http://note.youdao.com/yws/public/resource/ffefb6fa5bca403ed5711d3e6aed479d/xmlnote/36051DBA64E3422F8763A350FBC98FE4/24350)
 
 拦截器

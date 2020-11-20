@@ -364,4 +364,4 @@ void | sendOffsetsToTransaction(sendOffsetsToTransaction(Map<TopicPartition,Offs
 void | sendOffsetsToTransaction(Map<TopicPartition,OffsetAndMetadata> offsets, String consumerGroupId)<br>向事务协调器发送一个带有groupId的提交offset请求，从而可以在内部__consumer-offsets主题中推导出该消费者组的Topic与Partition
 
 #### 参考文献
-![kafka官网Producer地址](http://kafka.apache.org/26/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html)
+1、[kafka官网Producer地址](http://kafka.apache.org/26/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html)

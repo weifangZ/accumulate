@@ -362,3 +362,6 @@ Map<MetricName, ? extends Metric> | metrics()<br> 返回的是生产者内部所
 List<PartitionInfo> | partitionsFor(String topic)<br>通过给定的topic获取对应的partition信息
 void | sendOffsetsToTransaction(sendOffsetsToTransaction(Map<TopicPartition,OffsetAndMetadata> offsets, ConsumerGroupMetadata groupMetadata))<br>将指定的偏移量列表发送给consumer组的协调器，并将这些偏移量标记为当前事务的一部分。
 void | sendOffsetsToTransaction(Map<TopicPartition,OffsetAndMetadata> offsets, String consumerGroupId)<br>向事务协调器发送一个带有groupId的提交offset请求，从而可以在内部__consumer-offsets主题中推导出该消费者组的Topic与Partition
+
+#### 参考文献
+![kafka官网Producer地址](http://kafka.apache.org/26/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html)

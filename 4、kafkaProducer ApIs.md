@@ -1,4 +1,5 @@
 
+
 **2.4、APIs（学习中）**
 
 **2.4.1、producer Api**
@@ -158,7 +159,17 @@ public class MyPartitions implements Partitioner {
 
 ```
 得到结果如下：
+
 ![](http://note.youdao.com/yws/public/resource/ffefb6fa5bca403ed5711d3e6aed479d/xmlnote/61F19A5718F949499555B5AADFAFD431/24320)
+
+**同步发送API**
+```
+//使用get会将main线程阻塞，等到sender线程发完，在进行发送，此时就像同步一样。需要配置成1个分区，且同步才会有序
+producer.send(new ProducerRecord<String, String>("newzwf", 0, i + "", "zwftestproducer" + i)).get();
+```
+
+
+
 
 **2.4.2、consumer Api**
 
@@ -169,23 +180,24 @@ package com.zwf.kafa;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 import java.util.Collections;
 import java.util.Properties;
 
-public class KafkaConsumer {
+public class MyConsumer {
     public static void main(String[] args) {
         //1、创建卡夫卡生产者的配置信息
         Properties properties = new Properties();
         //2、指定的链接的kafka集群
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.131.131:9092,192.168.131.128:9092,192.168.131.129:9092");
-        //3、应答级别
+        //3、组
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "all-zwf");
-        //4、设置序列化
+        //4、设置反序列化
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         //5、创建消费者对象
-        org.apache.kafka.clients.consumer.KafkaConsumer kafkaConsumer = new org.apache.kafka.clients.consumer.KafkaConsumer(properties);
+        KafkaConsumer kafkaConsumer = new KafkaConsumer(properties);
         //6、订阅topic
         kafkaConsumer.subscribe(Collections.singleton("mcTrade"));
         //支持正则表达式
@@ -201,7 +213,6 @@ public class KafkaConsumer {
                         System.out.println(record.value()+"a");
                     }
 
-                    //提交offset 
                     kafkaConsumer.commitAsync();
                 }
             }
@@ -210,11 +221,143 @@ public class KafkaConsumer {
         }
     }
 }
-
+/*
+* 无论是自动提交还是手动提交都会存在问题
+* 1、丢数据
+* 2、重复数据 第一次我读的是100条数，假设处理时间5s中，10s才会提交offset，当第6s是程序挂掉，此时在启动程序，还会重复数据的。
+* 无论自动提交和手动提交都会有以上问题
+* 所以提供了一个自定义提交offset方式。
+* 应用场景，事务提交一致性（处理与提交绑定到一起）
+* 消费者的re-balance 分区分配原则重新触发
+* 如果实现自定义提交offset 借助于consumerRebalanceListener
+* 消费者要求完全不丢失数据：
+* subscribe（这里的函数可以自己重写，何时提交，怎么提交数据自己维护的offset）
+*
+* */
 ```
+
 得到的结果如下：
 
 ![](http://note.youdao.com/yws/public/resource/ffefb6fa5bca403ed5711d3e6aed479d/xmlnote/36051DBA64E3422F8763A350FBC98FE4/24350)
 
-拦截器
+**自定义拦截器 interceptor**
+既然可以自定义分区器，拦截器肯定可以自定义。
+比如场上网kafkatopic里面写
+核心方法：
 
+1、configs()\
+2、onSend(ProducerRecord)\
+3、onAcknowledgement(RecordMetadata, Exception)\
+4、close()
+
+**一个计数的拦截器**
+``` java
+package com.zwf.kafa.interceptor;
+
+import org.apache.kafka.clients.producer.ProducerInterceptor;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+
+import java.util.Map;
+
+public class CountInterceptor implements ProducerInterceptor<String, String> {
+
+    int success;
+    int error;
+    public ProducerRecord<String, String> onSend(ProducerRecord<String, String> producerRecord) {
+        return producerRecord;
+    }
+
+    public void onAcknowledgement(RecordMetadata recordMetadata, Exception e) {
+
+        if(recordMetadata != null) {
+            success ++;
+        } else {
+            error++;
+        }
+    }
+
+    public void close() {
+        System.out.println("success: " + success);
+        System.out.println("error: " + error);
+    }
+
+    public void configure(Map<String, ?> map) {
+
+    }
+}
+
+```
+producer console print :
+
+![](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/C49D056972B34F7082D2BCCF6B786A31/24531)
+
+
+**一个加时间戳的拦截器**
+``` java
+package com.zwf.kafa.interceptor;
+
+import org.apache.kafka.clients.producer.ProducerInterceptor;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+
+import java.util.Map;
+
+public class TimerInterceptor implements ProducerInterceptor<String, String> {
+
+    /**
+     * frist config
+     * @param map map
+     */
+    public void configure(Map<String, ?> map) {
+
+    }
+    public ProducerRecord<String, String> onSend(ProducerRecord<String, String> producerRecord) {
+        long timerStmp = System.currentTimeMillis();
+
+        ProducerRecord<String, String> producerRecordResult = new ProducerRecord<String, String>(producerRecord.topic(),producerRecord.partition(), producerRecord.key(),timerStmp + ", " + producerRecord.value());
+        return producerRecordResult;
+    }
+
+    public void onAcknowledgement(RecordMetadata recordMetadata, Exception e) {
+
+    }
+
+    public void close() {
+
+    }
+
+}
+
+```
+consumer console print :
+![](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/D2DEB65AC02846E1811771851B23D113/24529)
+
+**Kafka Producer All Methods**
+
+![](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/C34D97A030DA4C0D94FAB8585E6E9211/24396)
+
+KafkaProducer有4个构造方法
+``` java
+public KafkaProducer(Map<String,Object> configs)
+public KafkaProducer(Map<String,Object> configs,Serializer<K> keySerializer,Serializer<V> valueSerializer)
+public KafkaProducer(Properties properties)
+public KafkaProducer(Properties properties,Serializer<K> keySerializer,Serializer<V> valueSerializer)
+```
+          
+kafkaProducer目前有12个自有的方法，1个继承父类Producer的方法close()以及继承Object的方法。
+Modifier and Type | Method and Description
+---|---
+void | close()<br> 关闭 producer.
+void | close(Duration timeOut)<br> 延时timeOut时间后关闭producer，为了生产者将数据全部发完
+Future<RecordMetadata> | send(ProducerRecord<K, V> record)<br> 发送数据
+Future<RecordMetadata> | send(ProducerRecord<K, V> record, Callback callback)<br> 发送数据，带回掉函数
+void | abortTransaction()<br> 中止正在进行的事务
+void | beginTransaction()<br> 每个事务开始前进行调用
+void | commitTransaction()<br> 提交事务
+void | flush()<br> 刷新，立即发送
+void | initTransaction()<br> 初始化事务其他方法调用前进行调用这个方法
+Map<MetricName, ? extends Metric> | metrics()<br> 返回的是生产者内部所有的指标信息。特意debug了下
+List<PartitionInfo> | partitionsFor(String topic)<br>通过给定的topic获取对应的partition信息
+void | sendOffsetsToTransaction(sendOffsetsToTransaction(Map<TopicPartition,OffsetAndMetadata> offsets, ConsumerGroupMetadata groupMetadata))<br>将指定的偏移量列表发送给consumer组的协调器，并将这些偏移量标记为当前事务的一部分。
+void | sendOffsetsToTransaction(Map<TopicPartition,OffsetAndMetadata> offsets, String consumerGroupId)<br>向事务协调器发送一个带有groupId的提交offset请求，从而可以在内部__consumer-offsets主题中推导出该消费者组的Topic与Partition

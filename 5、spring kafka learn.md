@@ -186,10 +186,10 @@ stream:
       # snappy 压缩/解压速度也比较快，合理的压缩率,不支持split，支持hadoop native库，需要自己安装。可以用于map中间结果的压缩。
       compression-type: lz4
       properties:
-        #buffer-memory 与linger.ms配合起来就是在100ms内攒的批量数据打包发送到topic上。满足batch.size和ling.ms之一，就会激活sender线程来发送消息。
-        #情况1、当数据已经到了buffer-memory（32m）量，但是时间没到100ms，进行发送数据。
-        #情况2、当数据不满buffer-memory时间到了100ms也会发送数据。
-        #情况3、当发生情况一的时候再来数据时超过了buffer-memory此时会报错（warning）不让其发给topic。
+        #batch-size 与linger.ms配合起来就是在100ms内攒的批量数据打包发送到topic上。满足batch.size和ling.ms之一，就会激活sender线程来发送消息。
+        #情况1、当数据已经到了batch-size（16k）量，但是时间没到100ms，进行发送数据。
+        #情况2、当数据不满batch-size时间到了100ms也会发送数据。
+        #情况3、当发生情况一的时候再来数据时超过了batch-size此时会报错（warning）不让其发给topic。
         linger.ms: 100
         #enable.idempotence设置成true后，Producer自动升级成幂等性Producer。Kafka会自动去重。Broker会多保存一些字段。当Producer发送了相同字段值的消息后，Broker能够自动知晓这些消息已经重复了。
         enable.idempotence: true

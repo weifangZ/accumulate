@@ -159,6 +159,7 @@ public class testAutoCommit {
 执行结果：
 
 ![](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/00F70B3EE5BB49638BA029FDCFB47C76/24555)
+
 通过分析源码发现spring kafka 的核心文件：
 
 application.yml
@@ -206,14 +207,82 @@ stream:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       # 值的反序列化方式
       value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
-      # kafka consumer 消费能力在max-poll-interval-ms消费max-poll-records这些数据，当消费能力不足时则kafka认为这个consumer就挂了。进行rebalance
+      # 一次调用poll()操作时返回的最大记录数，默认值为500
       max-poll-records: 10000
       # 启动程序自动开启kafka监听 true|false
       auto-startup: false
+      #它表示最大的poll数据间隔，如果超过这个间隔没有发起pool请求，但heartbeat仍旧在发，就认为该consumer处于 livelock状态。就会将该consumer退出consumer group。所以为了不使Consumer 自己被退出，Consumer 应该不停的发起poll(timeout)操作。而这个动作 KafkaConsumer Client是不会帮我们做的，这就需要自己在程序中不停的调用poll方法了。
       max-poll-interval-ms: 500
 ```
+![](https://www.pianshen.com/images/825/4c4e8906981b5e1f3bb5f95792350a81.png)
 producer:kafkaTemplate
+这个类的接口前面也提过,这里详细介绍一下：
 
-comsumer:@KafkaListener
+1、接口入参参数解释：
+
+- topic：topic name
+- partition：分区 id
+- timestamp：时间戳
+- key：消息的键
+- data：消息的数据
+- ProducerRecord：消息对应的封装类可以包含（topic、partition、timestamp、key、data等信息）
+- Message<?>：Spring自带的Message封装类，包含消息及消息头
+
+2、kafkaTemplate内部变量：
+- producerFactory\
+producerFactory用来创建KafkaProducer。getProducerFactory(topic)方法通过传入的topic来确定producerFactory，默认是返回this.producerFactory
+- autoFlush\
+在等待的过程中，你可能想要调用flush()方法，为了简便，template类提供了一个autoFlush，这个属性将会在每次send的时候，立即去flush掉sending thread.不过autoFlush将会明显降低性能(boolean autoFlush）。 
 
 
+```
+//sendDefault 实际也是send()只是先通过setDefaultTopic方法将topic定义好，这样就会向指定的topic发送数据
+ListenableFuture<SendResult<K, V>> sendDefault(V data);
+//同send(String topic, K key, V data)
+ListenableFuture<SendResult<K, V>> sendDefault(K key, V data);
+//同send(String topic, Integer partition, K key, V data);
+ListenableFuture<SendResult<K, V>> sendDefault(Integer partition, K key, V data);
+//同send(String topic, Integer partition, Long timestamp, K key, V data);
+ListenableFuture<SendResult<K, V>> sendDefault(Integer partition, Long timestamp, K key, V data);
+//该方法也是封装了apache kafka原生的 send方法 ,通过getTheProducer获得KafkaProducer对象，KafkaProducer对象发送数据ProducerRecord
+ListenableFuture<SendResult<K, V>> send(String topic, V data);
+ListenableFuture<SendResult<K, V>> send(String topic, K key, V data);
+ListenableFuture<SendResult<K, V>> send(String topic, Integer partition, K key, V data);
+ListenableFuture<SendResult<K, V>> send(String topic, Integer partition, Long timestamp, K key, V data);
+ListenableFuture<SendResult<K, V>> send(ProducerRecord<K, V> record);
+ListenableFuture<SendResult<K, V>> send(Message<?> message);
+```
+**comsumer:@KafkaListener**
+
+@KafkaListener注解提供了以下配置功能
+![](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/0FDDD42301444AFC9057547E57218571/24676)
+
+对应参数解释如下：
+
+参数名称 | 参数类型 | 解释
+---|--- |---
+autoStartup | String | true、false 是否自动开启监听
+beanRef | String | 此注解中SpEL表达式中使用的伪bean名，用于指向此监听器的当前bean，从而允许访问封装bean中的属性和方法。
+clientIdPrefix| String | 用来重写客户端Id的功能
+concurrency | String | 重新设置并发设置
+containerFactory | String | 设置监听容器工厂类
+containerGroup| String |设置了这个属性，当前的监听器会被加进设置的这个容器组里面，后面你可以通过遍历这个集合来启动或终止一组监听器集合。
+errorHandler | String |异常处理器，如果监听器处理方法抛出异常，你可以设置一个实现了KafkaListenerErrorHandler的异常处理类来处理抛出的异常。
+groupId | String |重新设置消费者所属组
+id| String |代表当前节点的唯一标识，不配置的话会自动分配一个id，主动配置的话，groupId会被设置成id的值（前提是idIsGroup这个属性值没有被设置成false）。
+idIsGroup | boolean |id是否能用作groupId 默认 true
+properties| String[]| 消费者属性，将替换在消费者工厂中定义的具有相同名称的任何属性(如果消费者工厂支持属性覆盖)。
+splitIterables| boolean |当设置为false且返回类型为Iterable时，返回结果作为单个返回记录的值，而不是每个元素的单个记录。
+topicPartitions|TopicPartition[]|可以设置更加详细的监听信息，包括topic、partitions和partitionOffsets。
+topicPattern| String |Topic主题，支持属性占位符，或者是正则表达式。批量主题订阅
+topics | String[] |可以订阅多个主题
+
+
+参考文献：
+
+1、[kafka官网](http://kafka.apache.org/documentation/)\
+2、[深入浅出Linux-零拷贝技术sendfile](https://www.jianshu.com/p/028cf0008ca5)\
+3、[KafkaTemplate发送消息及结果回调](http://blog.seasedge.cn/archives/15.html)\
+4、[kafkaProducerAPIs](https://kafka.apachecn.org/10/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html)\
+5、[Spring for Apache Kafka](https://docs.spring.io/spring-kafka/docs/current/reference/html/)\
+6、[Spring  KafkaListener](https://docs.spring.io/spring-kafka/api/org/springframework/kafka/annotation/KafkaListener.html)

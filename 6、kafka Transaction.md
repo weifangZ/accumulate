@@ -70,6 +70,7 @@ auto-offset-reset: earliest
 
 另外，我进行多活场景测试，测试结果显示如果未进行手动提交offset，consumer每次重启都会重新拉取全量数据。这个现象表示：在某些特殊情况，比如多活场景，当一个点进行消费数据时，发生宕机，另一个点需要顶上来进行继续工作时，由于第一个节点未进行提交offset，kafka检测出第一个consumer失败了，kafka自动rebalance 到相同组的其他消费者上面如下图：
 ![rebalance](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/46A1DAD5DC2F498F9AF672F63170AB31/25000)
+
 然后第二个consumer 会从头消费所所有kafka里面的数据：
 ![多活时第一个点活着在工作](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/8F52F16D281144BB83F6590216D39EA4/24987)
 ![](http://note.youdao.com/yws/public/resource/c336c9f401f7ed2acff65c1b781d2c6c/xmlnote/D9A07B100D904F6195649CC0AA44EECB/24989)

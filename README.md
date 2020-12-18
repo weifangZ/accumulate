@@ -6,4 +6,5 @@
 #### [week 5 学习基础的Spring kafka 对应项目学习 ](https://github.com/weifangZ/accumulate/blob/main/5%E3%80%81spring%20kafka%20learn.md)
 #### [week 6 思考与实践 kafka 事务性 ](https://github.com/weifangZ/accumulate/blob/main/6%E3%80%81kafka%20Transaction.md)
 #### [week 7 pulsar了解与kafka对比学习 ](https://github.com/weifangZ/accumulate/blob/main/7%E3%80%81Apache%20Pulsar.md)
+#### [week 8 学习kafka stream ](https://github.com/weifangZ/accumulate/blob/main/8%E3%80%81kafka%20stream.md)
 

@@ -1,5 +1,5 @@
 
-
+目前本机kafka版本与项目用一致：2.5.0，提供以下工具命令。
 
 ``` shell
  connect-distributed.sh
@@ -38,134 +38,20 @@
 
 ```
 
-1、connect-standalone.sh && connect-distributed.sh
-connect-standalone.sh为单机的命令格式，connect-distributed.sh为集群命令格式。
 
-2、 kafka-acls.sh
-实际：
-```
-exec $(dirname $0)/kafka-run-class.sh kafka.admin.AclCommand "$@"
-```
-
-#### 概述
-ACL是一种kafka 权限控制的工具，在处理一些核心的业务数据时，Kafka的ACL机制还是非常重要的，对核心业务主题进行权限管控，能够避免不必要的风险。
-
-#### 身份认证
-Kafka的认证范围包含如下：
-
-Client与Broker之间
-Broker与Broker之间
-Broker与Zookeeper之间
-当前Kafka系统支持多种认证机制，如SSL、SASL（Kerberos、PLAIN、SCRAM）。
-
-##### SASL认证流程
-配置流程
-1、创建证书
-```
-kafka-configs.sh --bootstrap-server clear-node-2:9092 --alter --add-config 'SCRAM-SHA-256=[iterations=8192,password=alice-secret],SCRAM-SHA-512=[password=alice-secret]' --entity-type users --entity-name alice
-kafka-configs.sh --bootstrap-server clear-node-2:9092 --alter --add-config 'SCRAM-SHA-256=[password=admin-secret],SCRAM-SHA-512=[password=admin-secret]' --entity-type users --entity-name admin
-```
-
-2、验证证书
-```
-kafka-configs.sh --bootstrap-server clear-node-2:9092 --describe --entity-type users --entity-name alice
-
-```
-
-问题：
-```
-could not find a ‘kafkaserver’ or ‘sasl_plaintext.kafkaserver’ entry in the jaas configuration
-```
-解决方法：
-
-Kafka启动脚本中加入配置，读取第一步创建的文件,kafka_server_jaas.conf
-
-修改kafka的kafka-server-start.sh文件，
-
-在如下代码
-```
-export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"
-```
-添加
-```
- export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G -Djava.security.auth.login.config=/opt/kafka_2.11-1.1.1/config/kaf
-```
-在配置好SASL后，启动Zookeeper集群和Kafka集群之后，就可以使用kafka-acls.sh脚本来操作ACL机制。
-
-　　（1）查看：在kafka-acls.sh脚本中传入list参数来查看ACL授权新
-```
-[hadoop@dn1 bin]$ kafka-acls.sh --list --authorizer-properties zookeeper.connect=clear-node-4:2181
-```
-　　（2）创建：创建待授权主题之前，在kafka-acls.sh脚本中指定JAAS文件路径，然后在执行创建操作
-```
-kafka-topics.sh --create --bootstrap-server clear-node-4:9092 --replication-factor 1 --partitions 1 --topic kafka_acl_topic
-```
-　　（3）生产者授权：对生产者执行授权操作
-　　
-```
-[hadoop@dn1 ~]$ kafka-acls.sh --authorizer kafka.security.auth.SimpleAclAuthorizer --authorizer-properties zookeeper.connect=clear-node-4:2181 --add --allow-principal User: producer --operation Write --topic kafka_acl_topic
-```
-　　（4）消费者授权：对生产者执行授权后，通过消费者来进行验证
-```
-[hadoop@dn1 ~]$ kafka-acls.sh --authorizer kafka.security.auth.SimpleAclAuthorizer --authorizer-properties zookeeper.connect=clear-node-4:2181 --add --allow-principalUser:consumer --operation Read --topic kafka_acl_topic
-```
-　　（5）删除：通过remove参数来回收相关权限
-```
-[hadoop@dn1 bin]$    kafka-acls.sh --authorizer-properties zookeeper.connect=clear-node-4:2181 --remove --allow-principal User:producer --operation Write --topic kafka_acl_topic3
-```
-
-kafka-config.sh
-
-![560365280f39d0516da9dd3a0a12f250_273782-20200207233722724-2083026365](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image560365280f39d0516da9dd3a0a12f250_273782-20200207233722724-2083026365.png)
-
-语法格式：
-某个topic配置对象
-```
-./kafka-configs.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129:9092,192.168.131.131:9092  --alter --entity-type topics --entity-name mcTrade  --add-config unclean.leader.election.enable=true
-
-```
-![20201217191642](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201217191642.png)
-
-删除配置项
-```
-./kafka-configs.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129:9092,192.168.131.131:9092  --alter --entity-type topics --entity-name mcTrade  --delete-config unclean.leader.election.enable=true
-
-```
-![20201217191830](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201217191830.png)
-
-列出entity配置描述
-```
-./kafka-configs.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129:9092,192.168.131.131:9092  --entity-type topics --entity-name mcTrade --describe
-
-```
-![20201217192117](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201217192117.png)
-
-可以进行配置限额的设置：
-
-kafka支持配额管理，从而可以对Producer和Consumer的produce&fetch操作进行流量限制，防止个别业务压爆服务器。
-
-配额限流简介
-
-Kafka配额限流由3种粒度配置：
-
-- users + clients
-- users
-- clients
-
-
-kafka-broker-api-versions.sh 版本信息
+### kafka-broker-api-versions.sh 版本信息
 ```
 ./kafka-broker-api-versions.sh –bootstrap-server 192.168.131.128:9092,192.168.131.129:9092,192.168.131.131:9092
 ```
-![20201217194027](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201217194027.png)
+![20201217194027](https://github.com/weifangZ/image/blob/master/image20201217194027.png)
 
-kafka-consumer-groups.sh 消费者组
+### kafka-consumer-groups.sh 消费者组
 
 消费组 描述
 ```
 kafka-consumer-groups.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129:9092,192.168.131.131:9092 --all-groups --describe
 ```
-![20201217194333](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201217194333.png)
+![20201217194333](https://github.com/weifangZ/image/blob/master/image20201217194333.png)
 
 消费组 描述
 ```
@@ -176,7 +62,7 @@ kafka-consumer-groups.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129
 ```
 kafka-consumer-groups.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129:9092,192.168.131.131:9092 --group all-zwf2 --describe
 ```
-![20201217195609](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201217195609.png)
+![20201217195609](https://github.com/weifangZ/image/blob/master/image20201217195609.png)
 
 
 ### ./kafka-delete-records.sh 删除低水位的日志文件
@@ -195,9 +81,9 @@ mcTrade.json
     "version": 1
 }
 ```
-![20201223171339](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201223171339.png)
+![20201223171339](https://github.com/weifangZ/image/blob/master/image20201223171339.png)
 查看对应的offset
-![20201223171415](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201223171415.png)
+![20201223171415](https://github.com/weifangZ/image/blob/master/image20201223171415.png)
 发现数据时删除了9条，但是offset并没有降低，说明这个删除只是delete 操作，通过low_watermark: 9这样的进行的操作。
 
 此时"offset": 9这里的9不能高于topic的offset，否则会报错，所以在使用这个命令时，需要知道offset位置。
@@ -208,7 +94,7 @@ mcTrade.json
 kafka-log-dirs.sh --bootstrap-server 192.168.131.131:9092 --topic-list mcTrade --describe
 
 ```
-![20201223191726](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201223191726.png)
+![20201223191726](https://github.com/weifangZ/image/blob/master/image20201223191726.png)
 
 ### kafka-mirror-maker.sh 不同数据中心kafka集群复制工具
 
@@ -255,13 +141,13 @@ MirrorMaker是Kafka附带的一个用于在Kafka集群之间制作镜像数据�
 其实现原理是通过从源集群中消费消息，然后将消息生产到目标集群中，也就是普通的生产和消费消息。
 用户只需要在启动Kafka Mirror Maker时指定一些简单的消费端和生产端配置就可以实现准实时的数据同步。
 
-三、kafka-mirror-maker.sh脚本使用
+二、kafka-mirror-maker.sh脚本使用
 
-3.1、先决条件
+2.1、先决条件
 
 首先目标集群的kafka服务端必须开启 auto.create.topics.enable=true ，以允许自动创建topic；或者对于需要进行镜像的topic都自己手动进行创建。自动创建的topic会根据服务端配置的num.partitions、default.replication.factor决定。
 
-3.2、演示使用
+2.2、演示使用
 
 演示从集群1中将主题test-perf的数据同步到集群2中，首先创建并配置两个配置文件，参考如下：
 ```
@@ -269,8 +155,84 @@ MirrorMaker是Kafka附带的一个用于在Kafka集群之间制作镜像数据�
 bootstrap.servers=kafka1:9092
 group.id=groupIdMirror
 client.id=sourceMirror
-partition.assignment.strategy=org.apache.kafka.clients.consumer.RoundRobinAsignor
+partition.assignment.strategy=org.apache.kafka.clients.consumer.RoundRobinAssignor
 ```
+这里要说一下kafka的三种分区策略：
+
+1、Range(默认策略)
+Range分区是针对同一topic的进行分组，分组规则为：
+n=分区数/消费者数量，m=分区数%消费者数量，那么前m个消费者每个分配n+1个分区，后面的（消费者数量-m）个消费者每个分配n个分区。
+
+假如有10个分区，3个消费者线程，把分区按照序号排列0，1，2，3，4，5，6，7，8，9；消费者线程为C1-0，C2-0，C2-1，那么用partition数除以消费者线程的总数来决定每个消费者线程消费几个partition，如果除不尽，前面几个消费者将会多消费一个分区。在我们的例子里面，我们有10个分区，3个消费者线程，10/3 = 3，而且除除不尽，那么消费者线程C1-0将会多消费一个分区，所以最后分区分配的结果看起来是这样的：
+
+```
+C1-0：0，1，2，3
+C2-0：4，5，6
+C2-1：7，8，9
+```
+如果有11个分区将会是：
+```
+C1-0：0，1，2，3
+C2-0：4，5，6，7
+C2-1：8，9，10
+```
+假如我们有两个主题T1,T2，分别有10个分区，最后的分配结果将会是这样：
+```
+C1-0：T1（0，1，2，3） T2（0，1，2，3）
+C2-0：T1（4，5，6） T2（4，5，6）
+C2-1：T1（7，8，9） T2（7，8，9）
+```
+可以看出， C1-0消费者线程比其他消费者线程多消费了2个分区
+
+如上，只是针对 1 个 topic 而言，C1-0消费者多消费1个分区影响不是很大。如果有 N 多个 topic，那么针对每个 topic，消费者 C1-0 都将多消费 1 个分区，topic越多，C1-0 消费的分区会比其他消费者明显多消费 N 个分区。这就是 Range 范围分区的一个很明显的弊端了
+
+
+2、RoundRobin
+
+RoundRobinAssignor策略的原理是将消费组内所有消费者以及消费者所订阅的所有topic的partition按照字典序排序，然后通过轮询方式逐个将分区以此分配给每个消费者。RoundRobinAssignor策略对应的partition.assignment.strategy参数值为：
+```
+org.apache.kafka.clients.consumer.RoundRobinAssignor
+```
+使用RoundRobin策略有两个前提条件必须满足：
+- 同一个消费者组里面的所有消费者的num.streams（消费者消费线程数）必须相等；
+- 每个消费者订阅的主题必须相同。否则会分配不均匀
+
+假设一个有两个消费者C1、C2的num.streams= 2同时消费同一个主题T1，而这个主题有10分区
+我们的例子里面，加入按照 hashCode 排序完的topic-partitions组依次为T1-5, T1-3, T1-0, T1-8, T1-2, T1-1, T1-4, T1-7, T1-6, T1-9，我们的消费者线程排序为C1-0, C1-1, C2-0, C2-1，最后分区分配的结果为：
+```
+C1-0 将消费 T1-5, T1-2, T1-6 分区；
+C1-1 将消费 T1-3, T1-1, T1-9 分区；
+C2-0 将消费 T1-0, T1-4 分区；
+C2-1 将消费 T1-8, T1-7 分区；
+```
+3、StickyAssignor
+
+我们再来看一下StickyAssignor策略，“sticky”这个单词可以翻译为“粘性的”，Kafka从0.11.x版本开始引入这种分配策略，它主要有两个目的：
+- 分区的分配要尽可能的均匀，分配给消费者者的主题分区数最多相差一个；
+- 分区的分配尽可能的与上次分配的保持相同。
+
+举个例子：
+
+假设消费组内有3个消费者：C0、C1和C2，它们都订阅了4个主题：t0、t1、t2、t3，并且每个主题有2个分区，也就是说整个消费组订阅了t0p0、t0p1、t1p0、t1p1、t2p0、t2p1、t3p0、t3p1这8个分区。最终的分配结果如下：
+```
+消费者C0：t0p0、t1p1、t3p0
+消费者C1：t0p1、t2p0、t3p1
+消费者C2：t1p0、t2p1
+```
+这里动态平衡后，假设C1退出了消费者组。此时会rebalance：
+
+```
+消费者C0：t0p0、t1p0、t2p0、t3p0
+消费者C2：t0p1、t1p1、t2p1、t3p1
+```
+而robin的会重新分配成：
+```
+消费者C0：t0p0、t1p1、t3p0、t2p0
+消费者C2：t1p0、t2p1、t0p1、t3p1
+```
+可以看到分配结果中保留了上一次分配中对于消费者C0和C2的所有分配结果，并将原来消费者C1的“负担”分配给了剩余的两个消费者C0和C2，最终C0和C2的分配还保持了均衡。
+同理，不同消费者订阅的topic数量不同，分区不同是也是StickyAssignor策略更加优越，算法更加复杂。
+
 ```
 #producer.properties的配置
 bootstrap.servers=kafka2:9092
@@ -282,14 +244,72 @@ consumer.properties和producer.properties这两个配置文件中的配置对应
 ```
 ./kafka-mirror-maker.sh --consumer.config ../config/consumer.properties --producer.config ../config/producer.properties --whitelist 'test-perf' --num.streams 6
 ```
+待补充：执行
 
-3.3、使用注意事项
+2.3、使用注意事项
 
 kafka mirror maker中对于生产者写入失败时，会根据abort.on.send.failure的配置分两种处理方法；
 abort.on.send.failure=true ，此时如果生产者经过多次重试依然无法完成消息写入，则会直接停止kafka mirror maker进程；
 abort.on.send.failure=false ，此时如果生产者经过多次重试依然无法完成消息写入，则会直接跳过当前写入的批次数据，直接进行下一轮消息的写入；
 
 源集群和目标集群是两个完全独立的实体，对每个主题而言，两个集群之间的分区数可能不同；就算分区数相同，那么经过消费再生产之后消息所规划到的分区号也有可能不同；就算分区数相同，消息所规划到的分区号也相同，那么消息所对应的offset也有可能不相同，例如，源集群中由于执行了某次日志清理操作，某个分区的logStartOffset值变为10，而目标集群中对应分区的logStartOffset还是0，那么从源集群中原封不动的复制到目标集群时，同一条消息的offset也会不相同。
+
+
+
+### kafka-preferred-replica-election.sh
+
+
+kafka-preferred-replica-election命令 是用于对Leader进行重新负载均衡
+```
+This tool is deprecated. Please use kafka-leader-election tool. Tracking issue: KAFKA-8405
+```
+使用方式：
+1、 触发对所有的topic Leader进行负载均衡
+```
+./kafka-leader-election.sh --bootstrap-server 192.168.131.128:9092 --all-topic-partitions --election-type preferred
+./kafka-leader-election.sh --bootstrap-server 192.168.131.128:9092 --all-topic-partitions --election-type unclean
+
+```
+2、对某个topic Leader触发负载均衡
+```
+./kafka-leader-election.sh --bootstrap-server 192.168.131.128:9092 --topic mcTrade --partition 0  --election-type unclean
+./kafka-leader-election.sh --bootstrap-server 192.168.131.128:9092 --topic mcTrade --partition 0  --election-type preferred
+```
+![20201224145558](https://github.com/weifangZ/image/blob/master/image20201224145558.png)
+3、批量触发负载均衡
+```
+./kafka-leader-election.sh --bootstrap-server 192.168.131.128:9092 --path-to-json-file mcTrade.js  --election-type preferred
+```
+
+### kafka-producer-perf-test.sh kafka-consumer-perf-test.sh 官方提供的测试工具
+
+机器配置：
+![20201225100906](https://github.com/weifangZ/image/blob/master/image20201225100906.png)
+
+1、创建测试用的topic
+```
+kafka-topics.sh--create --bootstrap-server 192.168.131.128:9092 --topic test-rep-one --partitions 3 --replication-factor 1
+```
+2、生产数据
+
+```
+kafka-producer-perf-test.sh --topic test-rep-one  --num-records 500000 --record-size 200  --throughput -1  --producer-props  bootstrap.servers=192.168.131.128:9092 acks=-1
+```
+结果如下：
+![20201225100255](https://github.com/weifangZ/image/blob/master/image20201225100255.png)
+可以看出Kafka producer的平均吞吐量是6.96MB/s，即占用64Mb/s左右的带宽，平均每秒能发送36501条消息，平均延时是3.24秒，最大延时是6.1秒，平均有50%的消息发送需要花费3.2秒，95%的消息发送需要花费5.6秒 等等。
+参数的含义：
+num-records：总共需要发送的消息数，本例为500000
+record-size：每个记录的字节数，本例为200
+throughput：每秒钟发送的记录数
+
+3、消费者数据
+```
+kafka-consumer-perf-test.sh --broker-list 192.168.131.131:9092  --messages 500000 --topic test-rep-one 
+```
+结果如下：
+![20201225101313](https://github.com/weifangZ/image/blob/master/image20201225101313.png)
+### kafka-reassign-partitions.sh
 
 参考文献
 

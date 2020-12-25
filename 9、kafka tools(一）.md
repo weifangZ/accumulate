@@ -65,7 +65,7 @@ kafka-consumer-groups.sh --bootstrap-server 192.168.131.128:9092,192.168.131.129
 ![20201217195609](https://github.com/weifangZ/image/blob/master/image20201217195609.png)
 
 
-### ./kafka-delete-records.sh 删除低水位的日志文件
+### kafka-delete-records.sh 删除低水位的日志文件
 1、删除数据
 ```
 ./kafka-delete-records.sh --bootstrap-server 192.168.131.131:9092,192.168.131.129:9092,192.168.131.128:9092 --offset-json-file mcTrade.json 

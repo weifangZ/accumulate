@@ -1,5 +1,39 @@
-
-
+### kafka 工具学习（二）
+```
+ connect-distributed.sh
+ connect-mirror-maker.sh
+ connect-standalone.sh
+ kafka-acls.sh
+ kafka-broker-api-versions.sh
+ kafka-configs.sh
+ kafka-console-consumer.sh
+ kafka-console-producer.sh
+ kafka-consumer-groups.sh
+ kafka-consumer-perf-test.sh
+ kafka-delegation-tokens.sh
+ kafka-delete-records.sh
+ kafka-dump-log.sh
+ kafka-leader-election.sh
+ kafka-log-dirs.sh
+ kafka-mirror-maker.sh
+ kafka-preferred-replica-election.sh
+ kafka-producer-perf-test.sh
+ kafka-reassign-partitions.sh
+ kafka-replica-verification.sh
+ kafka-run-class.sh
+ kafka-server-start.sh
+ kafka-server-stop.sh
+ kafka-streams-application-reset.sh
+ kafka-topics.sh
+ kafka-verifiable-consumer.sh
+ kafka-verifiable-producer.sh
+ nohup.out
+ trogdor.sh
+ zookeeper-security-migration.sh
+ zookeeper-server-start.sh
+ zookeeper-server-stop.sh
+ zookeeper-shell.sh
+```
 ### kafka-server-start.sh kafka服务启动
 查看帮助文档
 ```
@@ -9,7 +43,7 @@ kafka 服务启动 以nohup方式启动 使用server.properties配置文件启�
 ```
 nohup ./kafka-server-start.sh ../config/server.properties
 ```
-![20201230094943](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201230094943.png)
+![20201230094943](https://github.com/weifangZ/accumulate/image/image20201230094943.png)
 
 ### kafka-server-stop.sh kafka服务停止
 
@@ -19,9 +53,9 @@ kafka-server-stop.sh
 kafka 服务停止
 ### kafka-streams-application-reset.sh用于给Kafka Streams应用程序重设位移，以便重新消费数据
 1、启动steams程序
-![20201230103227](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201230103227.png)
+![20201230103227](https://github.com/weifangZ/accumulate/image/image20201230103227.png)
 2、进行生产数据
-![20201230104332](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201230104332.png)
+![20201230104332](https://github.com/weifangZ/accumulate/image/image20201230104332.png)
 3、重新获取reset数据
 ```
 bin/kafka-streams-application-reset.sh --application-id my-streams-app --input-topics my-input-topic --intermediate-topics rekeyed-topic
@@ -93,7 +127,7 @@ usage: verifiable-consumer [-h] --topic TOPIC --group-id GROUP_ID [--group-insta
 ```
 kafka-verifiable-consumer.sh --bootstrap-server 192.168.131.131:9092 --topic mcTrade --group-id zwf
 ```
-![20201230112847](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201230112847.png)
+![20201230112847](https://github.com/weifangZ/accumulate/image/image20201230112847.png)
 
 ### kafka-verifiable-producer.sh 用于测试验证生产者功能
 ```
@@ -107,7 +141,7 @@ usage: verifiable-producer [-h] --topic TOPIC [--max-messages MAX-MESSAGES] [--t
 ```
 kafka-verifiable-consumer.sh --bootstrap-server 192.168.131.131:9092 --topic mcTrade --group-id zwf
 ```
-![20201230114223](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20201230114223.png)
+![20201230114223](https://github.com/weifangZ/accumulate/image/image20201230114223.png)
 
 ### zookeeper-security-migration.sh
 ```

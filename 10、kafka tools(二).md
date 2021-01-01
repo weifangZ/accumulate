@@ -43,7 +43,7 @@ kafka 服务启动 以nohup方式启动 使用server.properties配置文件启�
 ```
 nohup ./kafka-server-start.sh ../config/server.properties
 ```
-![20201230094943](https://github.com/weifangZ/accumulate/image/image20201230094943.png)
+![20201230094943](https://github.com/weifangZ/image/image20201230094943.png)
 
 ### kafka-server-stop.sh kafka服务停止
 
@@ -53,9 +53,9 @@ kafka-server-stop.sh
 kafka 服务停止
 ### kafka-streams-application-reset.sh用于给Kafka Streams应用程序重设位移，以便重新消费数据
 1、启动steams程序
-![20201230103227](https://github.com/weifangZ/accumulate/image/image20201230103227.png)
+![20201230103227](https://github.com/weifangZ/image/image20201230103227.png)
 2、进行生产数据
-![20201230104332](https://github.com/weifangZ/accumulate/image/image20201230104332.png)
+![20201230104332](https://github.com/weifangZ/image/image20201230104332.png)
 3、重新获取reset数据
 ```
 bin/kafka-streams-application-reset.sh --application-id my-streams-app --input-topics my-input-topic --intermediate-topics rekeyed-topic
@@ -127,7 +127,7 @@ usage: verifiable-consumer [-h] --topic TOPIC --group-id GROUP_ID [--group-insta
 ```
 kafka-verifiable-consumer.sh --bootstrap-server 192.168.131.131:9092 --topic mcTrade --group-id zwf
 ```
-![20201230112847](https://github.com/weifangZ/accumulate/image/image20201230112847.png)
+![20201230112847](https://github.com/weifangZ/accumulate/image20201230112847.png)
 
 ### kafka-verifiable-producer.sh 用于测试验证生产者功能
 ```
@@ -141,7 +141,7 @@ usage: verifiable-producer [-h] --topic TOPIC [--max-messages MAX-MESSAGES] [--t
 ```
 kafka-verifiable-consumer.sh --bootstrap-server 192.168.131.131:9092 --topic mcTrade --group-id zwf
 ```
-![20201230114223](https://github.com/weifangZ/accumulate/image/image20201230114223.png)
+![20201230114223](https://github.com/weifangZ/accumulate/image20201230114223.png)
 
 ### zookeeper-security-migration.sh
 ```

@@ -43,7 +43,7 @@ kafka 服务启动 以nohup方式启动 使用server.properties配置文件启�
 ```
 nohup ./kafka-server-start.sh ../config/server.properties
 ```
-![20201230094943](https://github.com/weifangZ/image/image20201230094943.png)
+![20201230094943](https://github.com/weifangZ/image/blob/master/image20201230094943.png)
 
 ### kafka-server-stop.sh kafka服务停止
 
@@ -53,9 +53,9 @@ kafka-server-stop.sh
 kafka 服务停止
 ### kafka-streams-application-reset.sh用于给Kafka Streams应用程序重设位移，以便重新消费数据
 1、启动steams程序
-![20201230103227](https://github.com/weifangZ/image/image20201230103227.png)
+![20201230103227](https://github.com/weifangZ/image/blob/master/image20201230103227.png)
 2、进行生产数据
-![20201230104332](https://github.com/weifangZ/image/image20201230104332.png)
+![20201230104332](https://github.com/weifangZ/image/blob/master/image20201230104332.png)
 3、重新获取reset数据
 ```
 bin/kafka-streams-application-reset.sh --application-id my-streams-app --input-topics my-input-topic --intermediate-topics rekeyed-topic
@@ -127,7 +127,7 @@ usage: verifiable-consumer [-h] --topic TOPIC --group-id GROUP_ID [--group-insta
 ```
 kafka-verifiable-consumer.sh --bootstrap-server 192.168.131.131:9092 --topic mcTrade --group-id zwf
 ```
-![20201230112847](https://github.com/weifangZ/accumulate/image20201230112847.png)
+![20201230112847](https://github.com/weifangZ/image/blob/master/image20201230112847.png)
 
 ### kafka-verifiable-producer.sh 用于测试验证生产者功能
 ```
@@ -141,7 +141,7 @@ usage: verifiable-producer [-h] --topic TOPIC [--max-messages MAX-MESSAGES] [--t
 ```
 kafka-verifiable-consumer.sh --bootstrap-server 192.168.131.131:9092 --topic mcTrade --group-id zwf
 ```
-![20201230114223](https://github.com/weifangZ/accumulate/image20201230114223.png)
+![20201230114223](https://github.com/weifangZ/image/blob/master/image20201230114223.png)
 
 ### zookeeper-security-migration.sh
 ```
@@ -163,4 +163,131 @@ zookeeper-security-migration --zookeeper.acl=secure --zookeeper.connection=local
 broker.id=2
 
 ```
-此时这些新的服务器不会自动分配到任何数据分区，除手动将消费者消费的分区指定到这些新增加的kafka分区，否则会等到创建新 topic 时才会提供服务
+此时这些新的服务器不会自动分配到任何数据分区，除手动将消费者消费的分区指定到这些新增加的kafka分区，否则会等到创建新 topic 时才会提供服务。
+报错1:
+```
+[2020-12-31 21:46:41,709] ERROR Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)
+kafka.common.InconsistentBrokerIdException: Configured broker.id 4 doesn't match stored broker.id 2 in meta.properties. If you moved your data, make sure your configured broker.id matches. If you intend to create a new broker, you should remove all data in your data directories (log.dirs).
+	at kafka.server.KafkaServer.getOrGenerateBrokerId(KafkaServer.scala:767)
+	at kafka.server.KafkaServer.startup(KafkaServer.scala:226)
+	at kafka.server.KafkaServerStartable.startup(KafkaServerStartable.scala:44)
+	at kafka.Kafka$.main(Kafka.scala:82)
+	at kafka.Kafka.main(Kafka.scala)
+
+```
+
+这种情况只有在一台机器上部署两个broker服务时才有可能发生，而且是server.properties中的log.dir配置采用默认配置/tmp/kafka-logs。删除就行。
+
+错误2：
+```
+[2020-12-31 22:05:14,347] ERROR [KafkaServer id=4] Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)
+org.apache.kafka.common.KafkaException: Socket server failed to bind to 192.168.131.129:9092: Cannot assign requested address.
+
+```
+
+解决办法，配置文件 server.properties  listeners=PLAINTEXT://192.168.131.128:9092  192.168.131.133 请不要写死地址
+
+但是问题来了，新添加的Kafka节点并不会自动地分配数据，所以无法分担集群的负载，除非我们新建一个topic。但是现在我们想手动将部分分区移到新添加的Kafka节点上，Kafka内部提供了相关的工具来重新分布某个topic的分区。在重新分布topic分区之前，我们先来看看现在topic的各个分区的分布位置：
+
+```
+[zwf@clear-node-3 bin]$ ./kafka-topics.sh --describe --bootstrap-server 192.168.131.128:9092 --topic mcTrade
+Topic: mcTrade	PartitionCount: 1	ReplicationFactor: 3	Configs: segment.bytes=1073741824,file.delete.delay.ms=3000
+	Topic: mcTrade	Partition: 0	Leader: 1	Replicas: 1,2,3	Isr: 2,3,1
+```
+新增一个topic看看：
+```
+[zwf@clear-node-3 bin]$ ./kafka-topics.sh --create --bootstrap-server 192.168.131.128:9092 --topic mcTradenew
+Created topic mcTradenew.
+[zwf@clear-node-3 bin]$ ./kafka-topics.sh --describe --bootstrap-server 192.168.131.128:9092 --topic mcTradenew
+Topic: mcTradenew	PartitionCount: 1	ReplicationFactor: 3	Configs: segment.bytes=1073741824,file.delete.delay.ms=3000
+	Topic: mcTradenew	Partition: 0	Leader: 1	Replicas: 1,4,2	Isr: 1,4,2
+[zwf@clear-node-3 bin]$ 
+
+```
+
+如何将mcTrade 的数据重新分配数据呢？
+
+使用Kafka自带的kafka-reassign-partitions.sh工具来重新分布分区。该工具有三种使用模式：
+
+　　1、generate模式，给定需要重新分配的Topic，自动生成reassign plan（并不执行）
+　　
+　　2、execute模式，根据指定的reassign plan重新分配Partition
+　　
+　　3、verify模式，验证重新分配Partition是否成功
+　　
+　　
+　　
+```
+kafka-reassign-partitions.sh --zookeeper 192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0 --topics-to-move-json-file topics-to-move.json --broker-list "1,2,3,4" --generate
+```
+topics-to-move.json
+```
+{"topics": [{"topic": "mcTrade"}],
+ "version":1
+}
+```
+结果如下：
+```
+[zwf@clear-node-3 bin]$ kafka-reassign-partitions.sh --zookeeper 192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0 --topics-to-move-json-file topics-to-move.json --broker-list "1,2,3,4" --generate
+Current partition replica assignment
+{"version":1,"partitions":[{"topic":"mcTrade","partition":0,"replicas":[1,2,3],"log_dirs":["any","any","any"]}]}
+
+Proposed partition reassignment configuration
+{"version":1,"partitions":[{"topic":"mcTrade","partition":0,"replicas":[1,4,2],"log_dirs":["any","any","any"]}]}
+
+```
+
+execute 数据迁移
+
+```
+kafka-reassign-partitions.sh --zookeeper 192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0 --reassignment-json-file result.json --execute
+```
+
+```
+{"version":1,"partitions":[{"topic":"mcTrade","partition":0,"replicas":[1,2,3],"log_dirs":["any","any","any"]}]}
+```
+
+出现问题：
+
+```
+[zwf@clear-node-3 bin]$ kafka-reassign-partitions.sh --zookeeper 192.168.131.131:2181 --reassignment-json-file result.json --execute
+Partitions reassignment failed due to The proposed assignment contains non-existent partitions: ListBuffer(mcTrade-0)
+kafka.common.AdminCommandFailedException: The proposed assignment contains non-existent partitions: ListBuffer(mcTrade-0)
+	at kafka.admin.ReassignPartitionsCommand$.parseAndValidate(ReassignPartitionsCommand.scala:342)
+	at kafka.admin.ReassignPartitionsCommand$.executeAssignment(ReassignPartitionsCommand.scala:209)
+	at kafka.admin.ReassignPartitionsCommand$.executeAssignment(ReassignPartitionsCommand.scala:205)
+	at kafka.admin.ReassignPartitionsCommand$.main(ReassignPartitionsCommand.scala:65)
+	at kafka.admin.ReassignPartitionsCommand.main(ReassignPartitionsCommand.scala)
+
+```
+原因为：
+```
+--zookeeper 192.168.131.131:218 改为192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0
+```
+解决后成功：
+```
+[zwf@clear-node-3 bin]$ kafka-reassign-partitions.sh --zookeeper 192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0 --reassignment-json-file result.json --execute
+Current partition replica assignment
+
+{"version":1,"partitions":[{"topic":"mcTrade","partition":0,"replicas":[1,2,3],"log_dirs":["any","any","any"]}]}
+
+Save this to use as the --reassignment-json-file option during rollback
+Successfully started reassignment of partitions.
+
+```
+
+verify 数据迁移验证
+```
+kafka-reassign-partitions.sh --zookeeper 192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0 --reassignment-json-file result.json --verify
+```
+
+结果如下：
+
+```
+[zwf@clear-node-3 bin]$ kafka-reassign-partitions.sh --zookeeper 192.168.131.128:2181,192.168.131.129:2181,192.168.131.131:2181/clear/kafka_2.12-2.5.0 --reassignment-json-file result.json --verify
+Status of partition reassignment: 
+Reassignment of partition mcTrade-0 completed successfully
+
+```
+
+![20210101185600](https://github.com/weifangZ/image/blob/master/image20210101185600.png)

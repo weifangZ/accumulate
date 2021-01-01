@@ -53,9 +53,13 @@ kafka-server-stop.sh
 kafka 服务停止
 ### kafka-streams-application-reset.sh用于给Kafka Streams应用程序重设位移，以便重新消费数据
 1、启动steams程序
+
 ![20201230103227](https://github.com/weifangZ/image/blob/master/image20201230103227.png)
+
 2、进行生产数据
+
 ![20201230104332](https://github.com/weifangZ/image/blob/master/image20201230104332.png)
+
 3、重新获取reset数据
 ```
 bin/kafka-streams-application-reset.sh --application-id my-streams-app --input-topics my-input-topic --intermediate-topics rekeyed-topic
@@ -291,3 +295,5 @@ Reassignment of partition mcTrade-0 completed successfully
 ```
 
 ![20210101185600](https://github.com/weifangZ/image/blob/master/image20210101185600.png)
+
+此时broker 4 已经是mcTrade 的isr 与 副本。

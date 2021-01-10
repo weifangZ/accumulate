@@ -4,12 +4,12 @@
 以下工具都是对kafka-run-class.sh的封装
 ![1610169856(1)](https://github.com/weifangZ/image/blob/master/image1610169856(1).png)
 
-1.kafka-topic.sh
+1.kafka-topic.sh  topic 相关操作运行的kafka.admin.TopicCommand进行处理的
 ```
 exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"
 ```
 
-2.kafka-console-consumer.sh
+2.kafka-console-consumer.sh 控制台进行消费数据kafka.tools.ConsoleConsumer使用这个类进行处理
 ```
 if [ "x$KAFKA_HEAP_OPTS" = "x" ]; then
     export KAFKA_HEAP_OPTS="-Xmx512M"
@@ -20,7 +20,7 @@ export KAFKA_OPTS="-Djava.security.auth.login.config=/home/zwf/clear/kafka_2.12-
 /kafka_client_jaas.conf"
 ```
 
-3.kafka-console-producer.sh
+3.kafka-console-producer.sh 消费者控制台命令 调用这个类kafka.tools.ConsoleProducer进行处理 通过学习kafka源码会发现kafka 提供的工具是这么处理这些命令的。
 ```
 if [ "x$KAFKA_HEAP_OPTS" = "x" ]; then
     export KAFKA_HEAP_OPTS="-Xmx512M"
@@ -31,7 +31,7 @@ export KAFKA_OPTS="-Djava.security.auth.login.config=/home/zwf/clear/kafka_2.12-
 /kafka_client_jaas.conf"
 
 ```
-4.kafka-dump-log.sh
+4.kafka-dump-log.sh 使用DumpLogSegments类进行处理数据dump导出功能
 ```
 exec $(dirname $0)/kafka-run-class.sh kafka.tools.DumpLogSegments "$@"
 

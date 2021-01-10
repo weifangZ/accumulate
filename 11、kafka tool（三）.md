@@ -1,16 +1,9 @@
 
 ### kafka 工具（三）
-经过分析kafka提供的工具都是根据
-```
-kafka-run-class.sh
-```
-基础上进行处理。
-所以我们学习kafka工具时候我们只需要看懂
-```
-kafka-run-class.sh
-```
-就可以了。
+经过分析kafka提供的工具都是根据kafka-run-class.sh基础上进行处理。所以我们学习kafka工具时候我们只需要看懂kafka-run-class.sh就可以了。
+以下工具都是对kafka-run-class.sh的封装
 ![1610169856(1)](https://github.com/weifangZ/image/blob/master/image1610169856(1).png)
+
 1.kafka-topic.sh
 ```
 exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"
@@ -295,6 +288,10 @@ composer.json  composer.lock  vendor （表示安装成功）
 ![20210109235536](https://github.com/weifangZ/image/blob/master/image20210109235536.png)
 
 编译好proto文件后
+
 ![20210110115553](https://github.com/weifangZ/image/blob/master/image20210110115553.png)
-就可以在java、cpp等项目工程去使用了。![20210110115741](https://github.com/weifangZ/image/blob/master/image20210110115741.png)
+
+就可以在java、cpp等项目工程去使用了。
+![20210110115741](https://github.com/weifangZ/image/blob/master/image20210110115741.png)
+
 这样一来就知道了我们项目中proto文件是这么编译成为java文件后进行使用的了。

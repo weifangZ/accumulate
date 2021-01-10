@@ -243,3 +243,58 @@ if [ "x$KAFKA_HEAP_OPTS" = "x" ]; then
 fi
 exec $(dirname $0)/kafka-run-class.sh org.apache.kafka.tools.VerifiableProducer "$@"
 ```
+
+### kafka通信协议 protobuf
+
+由于我们清算中使用了 protocol buf协议传输数据，所以学习一下。
+
+#### 安装
+![20210109173801](https://github.com/weifangZ/image/blob/master/image20210109173801.png)
+```
+wget https://github.com/google/protobuf/releases/download/v3.6.1/protobuf-all-3.6.1.tar.gz 
+tar zxvf protobuf-all-3.6.1.tar.gz
+cd protobuf-3.6.1
+./configure
+make
+make install
+protoc   -h
+protoc --version
+```
+![20210109193811](https://github.com/weifangZ/image/blob/master/image20210109193811.png)
+```
+[zwf@clear-node-4 protobuf-3.6.1]$ /usr/local/bin/protoc --version
+libprotoc 3.6.1
+```
+安装 composer
+```
+curl -sS https://getcomposer.org/installer | /usr/local/php-7.0.14/bin/php
+```
+接下来拷贝到可执行文件目录/usr/local/bin目录
+```
+mv composer.phar /usr/local/bin/composer
+```
+![20210109232207](https://github.com/weifangZ/image/blob/master/image20210109232207.png)
+
+3.composer在项目中引入protobuf：
+新建文件夹app,然后在app文件夹内新建composer.json文件，文件内容如下：
+```
+{
+    "require":{
+        "google/protobuf": "^3.6.1"
+    }
+}
+```
+保存之后，在app文件夹下执行composer install安装命令:
+```
+composer install
+ls (查看文件内容)
+composer.json  composer.lock  vendor （表示安装成功）
+```
+
+
+![20210109235536](https://github.com/weifangZ/image/blob/master/image20210109235536.png)
+
+编译好proto文件后
+![20210110115553](https://github.com/weifangZ/image/blob/master/image20210110115553.png)
+就可以在java、cpp等项目工程去使用了。![20210110115741](https://github.com/weifangZ/image/blob/master/image20210110115741.png)
+这样一来就知道了我们项目中proto文件是这么编译成为java文件后进行使用的了。

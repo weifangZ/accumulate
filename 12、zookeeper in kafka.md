@@ -92,3 +92,25 @@ Kafka中每个Topic都会以/brokers/topics/[topic]的形式被记录，如/brok
 
 ![consumer](https://github.com/weifangZ/image/blob/master/imageconsumer.png)
 
+
+### 运维问题 汇总
+
+#### 1、kafka producer 工作流程
+![](https://raw.githubusercontent.com/PassZhang/passzhang.github.io/images-picgo/20200425121444.png)
+- 封装为 ProducerRecord 实例
+- 序列化
+- 由 partitioner 确定具体分区
+- 发送到内存缓冲区
+- 由 producer 的一个专属 I/O 线程去取消息，并将其封装到一个批次 ，发送给对应分区的 kafka broker
+- leader 将消息写入本地 log
+- followers 从 leader pull 消息，写入本地 log 后 leader 发送 ACK
+- leader 收到所有 ISR 中的 replica 的 ACK 后，增加 HW（high watermark，最后 commit 的 offset） 并向 producer 发送 ACK
+
+#### 2、kafka consumer 工作流程
+- 连接 ZK 集群，拿到对应 topic 的 partition 信息和 partition 的 leader 的相关信息
+- 连接到对应 leader 对应的 broker
+- consumer 将自己保存的 offset 发送给 leader
+- leader 根据 offset 等信息定位到 segment（索引文件和日志文件）
+- 根据索引文件中的内容，定位到日志文件中该偏移量对应的开始位置读取相应长度的数据并返回给 consumer
+顺便学习一下https://app.diagrams.net/ 确实好用。
+![20210116124129](https://github.com/weifangZ/image/blob/master/image20210116124129.png)

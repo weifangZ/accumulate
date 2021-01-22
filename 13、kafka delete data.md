@@ -6,7 +6,7 @@
 ```
 # 一小时删除
 log.retention.hours=1
-# 500k后删除
+# 512k后删除
 log.retention.bytes=524288
 ```
 使用自己写的kafka 工具删除topic

@@ -196,7 +196,6 @@ rmr /brokers/topics/test
 ```
 
 执行结果如下
-
-![deletetpic](https://cdn.jsdelivr.net/gh/weifangZ/image@master/imagedeletetpic.png)
+![deletetpic](https://github.com/weifangZ/image/blob/master/imagedeletetpic.png)
 
 

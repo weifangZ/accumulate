@@ -24,6 +24,7 @@ Cannot open channel to * at election address
 发现 一个点不能ping通另外两个点了，所以导致了以上错误。
 
 设置了代理：
+
 ![20210121183017](https://github.com/weifangZ/image/blob/master/image20210121183017.png)
 
 #### 开始正式测试
@@ -33,12 +34,14 @@ Cannot open channel to * at election address
 写入1.8m的数进行分块4个，然后通过分块大小进行删除了分块，等待一个小时后将没达到512k的块也进行了删除。
 
 向mcTradenew topic 中写入了10w条数据
+
 ![20210121183728](https://github.com/weifangZ/image/blob/master/image20210121183728.png)
 
 kafka只会回收上个分片的数据
 配置没有生效的原因就是，数据并没有分片，所以没有回收
 
 ![20210121191031](https://github.com/weifangZ/image/blob/master/image20210121191031.png)
+
 数据分块了
 
 ![20210121191121](https://github.com/weifangZ/image/blob/master/image20210121191121.png)
@@ -48,11 +51,13 @@ kafka只会回收上个分片的数据
 ![20210121191201](https://github.com/weifangZ/image/blob/master/image20210121191201.png)
 
 等待1小时后查看数据删除效果。
+
 ![1611275652](https://github.com/weifangZ/image/blob/master/image1611275652.png)
 
 ![20210122083517](https://github.com/weifangZ/image/blob/master/image20210122083517.png)
 
 最后发现最后新生成的一个新的offset log文件，而且内容为空。此时消费数据也不能够消费成功，
+
 ![20210122083754](https://github.com/weifangZ/image/blob/master/image20210122083754.png)
 
 ##### 场景二、
@@ -63,6 +68,7 @@ kafka只会回收上个分片的数据
 一分钟过后数据没被删除，
 在等59分钟，后进行写入10条数据，此时我们再等60s
 无变化。说明按照时间删除数据的方案是按照这个分块送最新的时间开始算起。并且如果不分片就不会删除该数据。
+
 ![20210122111744](https://github.com/weifangZ/image/blob/master/image20210122111744.png)
 
 
@@ -83,18 +89,18 @@ segment.bytes 设置日志文件到了多大就会自动分片
   "log.retention.bytes": "536870912"
   # 数据删除延时1分钟
   "log.segment.delete.delay.ms": 60000
-  # 数据清理策略 3分钟
+  # 指定日志每隔多久检查看是否可以被删除 3mins
   "log.cleanup.interval.mins": 3
-  # 
+  # 当前日志分段中消息的最大时间戳与当前系统的时间戳的差值允许的最大范围，小时维度
   "log.roll.hours": 1
-  # 
-  "segment.bytes": "536870913"
-  # 
+  # 日志文件最大值
+  "log.segment.bytes": "536870913"
+  # 检测频率
   "log.retention.check.interval.ms": 120000
-  # 
-  "retention.ms": "3600000"
-  # 
-  "retention.bytes": "536870912"
+  # 日志保留时间毫秒
+  "log.retention.ms": "3600000"
+  # 运行保留日志文件最大值
+  "log.retention.bytes": "536870912"
 ```
 建议
 log.roll.hours

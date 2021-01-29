@@ -64,7 +64,7 @@ zookeeper-zwf-server-clear-node-2.out
 ```
 清算项目跑了一段时间后，发现该日志未作分割也没有删除已经达到了47gb大小了严重增加磁盘负担。
 
-![20210129155339](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210129155339.png)
+![20210129155339](https://github.com/weifangZ/image/blob/master/image20210129155339.png)
 
 所以我们要通过以下几种方式进行日志清理。
 在清理前，我们先简单的了解下zookeeper都有哪些日志：
@@ -76,17 +76,20 @@ zookeeper-zwf-server-clear-node-2.out
 快照日志目录：dataLogDir=/home/zwf/clear/zookeeper-3.5.8/logs
 
 **事务日志:** 指zookeeper系统在正常运行过程中，针对所有的更新操作，在返回客户端“更新成功”的响应前，zookeeper会保证已经将本次更新操作的事务日志已经写到磁盘上，只有这样，整个更新操作才会生效，在dataDir=/home/zwf/clear/allmetadata/zookeeper目录下生成一个version-2目录，该目录下面是一堆格式如log.****事务日志，文件大小为64MB，****表示写入该日志的第一个事务的ID，十六进制表示比如log.3a00000001。
-![20210129170958](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210129170958.png)
+
+![20210129170958](https://github.com/weifangZ/image/blob/master/image20210129170958.png)
 
 **快照日志:** zookeeper的数据在内存中是以树形结构进行存储的，而快照就是每隔一段时间就会把整个DataTree的数据序列化后存储在磁盘中，这就是zookeeper的快照文件。在/home/zwf/clear/zookeeper-3.5.8/logs目录下有一个version-2目录，下面是一对格式snapshot.**的快照文件，比如：snapshot.740000014a，其中**表示zookeeper触发快照的那个瞬间，提交的最后一个事务的ID。
-![20210129181816](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210129181816.png)
+
+![20210129181816](https://github.com/weifangZ/image/blob/master/image20210129181816.png)
 
 **事务日志可视化:**事务日志为二进制文件，不能通过vim等工具直接访问。其实可以通过zookeeper自带的jar包读取事务日志文件。首先将libs中的slf4j-api-1.7.25.jar文件和zookeeper根目录下的zookeeper-3.5.8.jar文件复制到临时文件夹loginfo中，然后执行如下命令：
 ```
 java -classpath .:slf4j-api-1.7.25.jar:zookeeper-3.5.8.jar:zookeeper-jute-3.5.8.jar org.apache.zookeeper.server.LogFormatter /home/zwf/clear/allmetadata/zookeeper/version-2/log.6300000001
 ```
 结果如下：
-![20210129192741](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210129192741.png)
+
+![20210129192741](https://github.com/weifangZ/image/blob/master/image20210129192741.png)
 
 ### 3.四种日志清理
 #### 1、手动清理
@@ -124,7 +127,8 @@ fi
 
 ```
 清理命令：
-![20210129170229](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210129170229.png)
+
+![20210129170229](https://github.com/weifangZ/image/blob/master/image20210129170229.png)
 
 清理后就剩下3个快照，命令要求至少保留三个快照。
 

@@ -95,16 +95,16 @@ public class findLeader {
 ```
 结果如下：
 
-![20210203195251](http://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210203195251.png)
+![20210203195251](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210203195251.png)
 
 
 如果
 
-![20210203195700](http://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210203195700.png)
+![20210203195700](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210203195700.png)
 
 如果其中leader 节点的kafka 挂了
 
-![20210204084623](http://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210204084623.png)
+![20210204084623](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210204084623.png)
 
 此时的kafka与zookeeper日志如下：
 ```
@@ -114,9 +114,9 @@ java.io.IOException: Connection to 192.168.131.129:9092 (id: 2 rack: null) faile
 
 然后选举新的leader
 
-![20210204085318](http://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210204085318.png)
+![20210204085318](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210204085318.png)
 
-![20210204085347](http://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210204085347.png)
+![20210204085347](https://cdn.jsdelivr.net/gh/weifangZ/image@master/image20210204085347.png)
 
 会发现id = 3 的节点接手了topic test 的leader 的位置
 并且调整topic的hw

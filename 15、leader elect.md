@@ -124,5 +124,4 @@ java.io.IOException: Connection to 192.168.131.129:9092 (id: 2 rack: null) faile
  newzwf-0 starts at leader epoch 167 from offset 163 with high watermark 163. Previous leader epoch was 166. (kafka.cluster.Partition)
 ```
 
-测试2
-![111](https://cdn.jsdelivr.net/gh/TRHX/CDN-for-itrhx.com@1.0/images/trhx.png)
+

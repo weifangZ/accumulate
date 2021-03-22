@@ -12,3 +12,6 @@
 #### [week 11 学习kafka tools(三) ](https://github.com/weifangZ/accumulate/blob/main/11%E3%80%81kafka%20tools%EF%BC%88%E4%B8%89%EF%BC%89.md)
 #### [week 12 zookeeper在kafka中应用 ](https://github.com/weifangZ/accumulate/blob/main/12%E3%80%81zookeeper%20in%20kafka.md)
 #### [week 13 kafka的两种删除数据方式 ](https://github.com/weifangZ/accumulate/blob/main/13%E3%80%81kafka%20delete%20data.md)
+
+
+test
